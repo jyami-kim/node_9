@@ -176,7 +176,6 @@ var listuser = function(req, res) {
 				req.app.render('listuser',context, function(err, html){
 					if(err){throw err;}
 
-					console.log('rendered'+ html);
 					res.end(html);
 				});
 
