@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charser = "UTF-8">
+        <title>회원가입</title>
+    </head>
+    <body>
+        <h1>회원가입</h1>
+
+        <!--인증처리후 메시지 있으면 메시지 표시-->
+        <%if(message.length>0){%>
+            <div><%= message%></div>
+        <%}%>
+
+        <form action = "/signup" method = "POST">
+            <div>
+                <label>이메일</label>
+                <input type = "text" name ="email">
+            </div>
+            <div>
+                <label>비밀번호</label>
+                <input type ="password" name ="password">
+            </div>
+            <div>
+                <label>비밀번호</label>
+                <input type ="password" name ="password">
+            </div>
+            <div>
+                <label>별명</label>
+                <input type ="text" name ="name">
+            </div>
+
+
+            <button type = "submit">회원가입</button>
+        </form>
+        <hr>
+
+        <p>이미 계정이 있으세요? <a href ="/login">로그인하기</a></p>
+        <p><a href="/">홈으로</a></p>
+        <br>
+        
+    </body>
+</html>

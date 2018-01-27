@@ -69,6 +69,63 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+
+var LocalStrategy = require('passport-local').Strategy;
+
+
+//패스포트 회원가입 설정
+passport.use('local-signup', new LocalStrategy({
+	usernameField: 'email',
+	passwordField: 'password',
+	passReqToCallback: true
+}, function(req, email, password, done){
+	//요청 파라미터 중 name파라미터 확인
+	var paramName = req.body.name || req.query.name;
+	console.log('passport의 local-signup 호출됨: '+ email+', '+ password+ ', '+paramName);
+
+	//User.findOne이 blocking되므로 async 방식으로 변경 할 수도 있다.
+	process.nextTick(function(){
+		var database = app.get('database');
+		database.UserModel.findOne({'email': email}, function(err, user){
+			//오류가 발생하면
+			if(err){
+				return done(err);
+			}
+
+			//기존에 이메일이 있다면
+			if(user){
+				console.log('기존에 계정이 있음');
+				return done(null, false, req.flash('signupMessage','계정이 이미 있습니다.'));
+			}else{
+				//모델 인스턴스 객체 만들어 저장
+				var user = new database.UserModel({'email':email, 'password': password, 'name': paramName});
+				user.save(function(err){
+					if(err){throw err;}
+					console.log('사용자 데이터 추가함');
+					return done(null, user);
+				});
+			}
+		});
+	});
+}));
+
+//사용자 인증에 성공했을 때 호출
+passport.serializeUser(function(user, done){
+	console.log('serializeUser() 호출됨.');
+	console.dir(user);
+
+	done(null, user);
+});
+
+//사용자 인증 이후 사용자 요청이 있을 때마다 호출
+passport.deserializeUser(function(user, done){
+	console.log('deserializeUser() 호출됨.');
+	console.dir(user);
+
+	done(null, user);
+});
+
+
  
 //라우팅 정보를 읽어들여 라우팅 설정
 var router = express.Router();
@@ -128,7 +185,12 @@ router.route('/profile').get(function(req,res){
 	}
 })
 
-var LocalStrategy = require('passport-local').Strategy;
+//로그아웃
+app.get('/logout',function(req,res){
+	console.log('/logout 패스 요청됨');
+	req.logout();
+	res.redirect('/');
+});
 
 //패스포트 로그인 설정
 passport.use('local-login', new LocalStrategy({
@@ -159,59 +221,6 @@ passport.use('local-login', new LocalStrategy({
 		return done(null, user);
 	});
 }));
-
-//패스포트 회원가입 설정
-passport.use('local-signup', new LocalStrategy({
-	usernameField: 'email',
-	passwordField: 'password',
-	passReqToCallback: true
-}, function(req, email, password, done){
-	//요청 파라미터 중 name파라미터 확인
-	var paramName = req.body.name || req.query.name;
-	console.log('passport의 local-signup 호출됨: '+ email+', '+ password+ ', '+paramName);
-
-	//User.findOne이 blocking되므로 async 방식으로 변경 할 수도 있다.
-	process.nextTick(function(){
-		var database = app.get('database');
-		database.UserModel.findOne({'email': email}, function(err, user){
-			//오류가 발생하면
-			if(err){
-				return done(err);
-			}
-
-			//기존에 이메일이 있다면
-			if(user){
-				console.log('기존에 계정이 있음');
-				return done(null, false, req.flash('signupMessage','계정이 이미 있습니다.'));
-			}else{
-				//모델 인스턴스 객체 만들어 저장
-				var user = new database.UserModel({'email':email, 'password': password, 'name': paramName});
-				user.save(function(err){
-					if(err){throw err;}
-					console.log('사용자 데이터 추가함');
-					return done(null, user);
-				});
-			}
-		});
-	});
-}));
-
-//사용자 인증에 성공했을 때 호출
-passport.serializeUser(function(user, done){
-	console.log('serializeUser() 호출됨.');
-	console.dir(user);
-
-	done(null, user);
-});
-
-//사용자 인증 이후 사용자 요청이 있을 때마다 호출
-passport.deserializeUser(function(user, done){
-	console.log('deserializeUser() 호출됨.');
-	console.dir(user);
-
-	done(null, user);
-});
-
 
 
 
